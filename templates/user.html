@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VirtuStat — Dashboard</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet"/>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="/static/css/user.css"/>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<header class="header">
+
+  <a class="logo-wrap" href="#">
+    <div class="logo-pulse">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <div class="logo-name">Virtu<span>Stat</span></div>
+      <div class="logo-tag">Monitor · Analyze · Optimize</div>
+    </div>
+  </a>
+
+  <div class="header-right">
+
+    <div class="live-pill">
+      <span class="live-dot"></span> Live
+    </div>
+
+    <div class="uptime-ticker" id="uptimeTicker">UP 00:00:00</div>
+
+    <div class="dd-wrap" id="ddTools">
+      <button class="dd-btn" onclick="toggleDD('ddTools')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        </svg>
+        <span>System Tools</span>
+        <svg class="dd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="dd-panel">
+        <div class="dd-header">Tools</div>
+        <button class="dd-item" onclick="exportReport()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Report
+        </button>
+      </div>
+    </div>
+
+    <div class="dd-wrap" id="ddProfile">
+      <button class="dd-btn" onclick="toggleDD('ddProfile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>My Account</span>
+        <svg class="dd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="dd-panel">
+        <div class="dd-header">Account</div>
+        <button class="dd-item" onclick="openEditProfile()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Profile
+        </button>
+        <div class="dd-divider"></div>
+        <button class="dd-item warn-item" onclick="openConfirm('logoutAdmin')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          Log-out
+        </button>
+        <button class="dd-item danger" onclick="openConfirm('delete')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Delete Account
+        </button>
+      </div>
+    </div>
+
+    <div class="dd-wrap" id="ddHistory">
+      <button class="dd-btn" onclick="toggleDD('ddHistory')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>History</span>
+        <svg class="dd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="dd-panel" style="min-width:270px">
+        <div class="dd-header" style="display:flex;align-items:center;justify-content:space-between">
+          Recent Sessions
+          <button onclick="clearHistory()" style="font-size:.68rem;color:var(--error);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600">Clear All</button>
+        </div>
+        <div id="historyList">
+          </div>
+      </div>
+    </div>
+
+  </div></header>
+
+<aside class="sidebar">
+  <div class="sidebar-section-label">Main</div>
+  <a class="nav-item active" onclick="scrollSection('#overview')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    <span>Overview</span>
+  </a>
+  <a class="nav-item" onclick="scrollSection('#resources')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Resources</span>
+    <span class="nav-badge ok">Live</span>
+  </a>
+
+  <div class="sidebar-section-label">Services</div>
+  <a class="nav-item" onclick="scrollSection('#admin')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span>My Services</span>
+    <span class="nav-badge ok" id="sideErrBadge">3</span>
+  </a>
+  <a class="nav-item" onclick="scrollSection('#health')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <span>System Health</span>
+  </a>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="user-avatar">U</div>
+      <div class="user-info">
+        <div class="user-name">User</div>
+        <div class="user-role">Client</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">System <span>Dashboard</span></div>
+      <div class="page-sub">Real-time monitoring · <span id="currentTime"></span></div>
+    </div>
+    <div class="page-meta">
+      <div class="live-pill"><span class="live-dot"></span> Monitoring Active</div>
+    </div>
+  </div>
+
+<div class="section" id="overview">
+  <div class="section-head">
+    <div class="section-head-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/>
+        <rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/>
+      </svg>
+    </div>
+    <div class="section-title">System <span>Overview</span></div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="grid-4">
+
+    <!-- USERS -->
+    <div class="card">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <span class="kpi-label-dot" style="background:var(--green)"></span>
+          Active Users
+        </div>
+
+        <div class="kpi-val kpi-green" id="kpiUsers">--</div>
+
+        <div class="kpi-delta text-green" id="kpiUsersDelta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+          --
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGIN ATTEMPTS -->
+    <div class="card">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <span class="kpi-label-dot" style="background:var(--warn)"></span>
+          Login Attempts
+        </div>
+
+        <div class="kpi-val kpi-warn" id="kpiLogins">--</div>
+
+        <div class="kpi-delta text-warn" id="kpiLoginsDelta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+            <polyline points="17 18 23 18 23 12"/>
+          </svg>
+          --
+        </div>
+      </div>
+    </div>
+
+    <!-- ERRORS -->
+    <div class="card">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <span class="kpi-label-dot" style="background:var(--error)"></span>
+          System Errors
+        </div>
+
+        <div class="kpi-val kpi-error" id="kpiErrors">--</div>
+
+        <div class="kpi-delta text-error" id="kpiErrorsDelta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          --
+        </div>
+      </div>
+    </div>
+
+    <!-- UPTIME -->
+    <div class="card">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <span class="kpi-label-dot" style="background:var(--green)"></span>
+          System Uptime
+        </div>
+
+        <div class="kpi-val kpi-green" id="kpiUptime">--</div>
+
+        <div class="kpi-delta text-muted" id="kpiUptimeTime">
+          Uptime: --
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+    </div>
+  </div><div class="section" id="resources">
+    <div class="section-head">
+      <div class="section-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="section-title">Resource <span>Visualizer</span></div>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="grid-net-gauge" style="margin-bottom:1rem">
+
+      <div class="card net-graph-card">
+        <div class="net-graph-top">
+          <div>
+            <div class="net-title">Network I/O Traffic</div>
+            <div style="font-size:.73rem;color:var(--muted);margin-top:2px">Real-time throughput · updated every 1.5s</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+            <div class="net-legend">
+              <div class="net-leg-item"><div class="net-leg-dot" style="background:var(--green)"></div>Download</div>
+              <div class="net-leg-item"><div class="net-leg-dot" style="background:#60a5fa"></div>Upload</div>
+            </div>
+            <div class="live-pill"><span class="live-dot"></span>Live</div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="networkChart"></canvas>
+        </div>
+        <div style="display:flex;gap:1.5rem;margin-top:.85rem;padding-top:.85rem;border-top:1px solid var(--border)">
+          <div>
+            <div style="font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em">↓ Download</div>
+            <div class="font-raj fw-700 text-green" style="font-size:1.1rem" id="netDown">0 MB/s</div>
+          </div>
+          <div>
+            <div style="font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em">↑ Upload</div>
+            <div class="font-raj fw-700" style="font-size:1.1rem;color:#60a5fa" id="netUp">0 MB/s</div>
+          </div>
+          <div>
+            <div style="font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Latency</div>
+            <div class="font-raj fw-700" style="font-size:1.1rem;color:var(--warn)" id="netLatency">0 ms</div>
+          </div>
+          <div>
+            <div style="font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Packets/s</div>
+            <div class="font-raj fw-700 text-green" style="font-size:1.1rem" id="netPackets">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        <div class="card" style="padding:1.25rem;flex:1">
+          <div style="font-size:.73rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.85rem">Bandwidth Utilization</div>
+          <div class="chart-container" style="height:140px">
+            <canvas id="bandwidthChart"></canvas>
+          </div>
+          <div style="font-size:.73rem;color:var(--muted);text-align:center;margin-top:.5rem" id="bwPct">Loading...</div>
+        </div>
+        <div class="card" style="padding:1rem">
+          <div style="font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.65rem">Active Interfaces</div>
+          <div style="display:flex;flex-direction:column;gap:.45rem;font-size:.76rem">
+            <div style="display:flex;justify-content:space-between"><span class="text-muted">eth0</span><span class="text-green mono">1 Gbps</span></div>
+            <div style="display:flex;justify-content:space-between"><span class="text-muted">eth1</span><span class="text-green mono">100 Mbps</span></div>
+            <div style="display:flex;justify-content:space-between"><span class="text-muted">lo</span><span class="text-muted mono">Loopback</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gauges-grid">
+      <div class="card gauge-card" id="gaugeCpuCard">
+        <div class="gauge-label">CPU Usage</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 100 100">
+            <circle class="gauge-track" cx="50" cy="50" r="38"/>
+            <circle class="gauge-fill" id="gaugeCpuFill" cx="50" cy="50" r="38"
+              stroke="var(--green)"
+              stroke-dasharray="238.76"
+              stroke-dashoffset="238.76"/>
+          </svg>
+          <div class="gauge-center">
+            <div class="gauge-pct text-green" id="gaugeCpuVal">0%</div>
+            <div class="gauge-unit">CPU</div>
+          </div>
+        </div>
+        <div class="gauge-sub" id="gaugeCpuSub">8 Cores · 3.6 GHz</div>
+      </div>
+
+      <div class="card gauge-card" id="gaugeRamCard">
+        <div class="gauge-label">RAM Usage</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 100 100">
+            <circle class="gauge-track" cx="50" cy="50" r="38"/>
+            <circle class="gauge-fill" id="gaugeRamFill" cx="50" cy="50" r="38"
+              stroke="#60a5fa"
+              stroke-dasharray="238.76"
+              stroke-dashoffset="238.76"/>
+          </svg>
+          <div class="gauge-center">
+            <div class="gauge-pct" style="color:#60a5fa" id="gaugeRamVal">0%</div>
+            <div class="gauge-unit">RAM</div>
+          </div>
+        </div>
+        <div class="gauge-sub" id="gaugeRamSub">0 / 32 GB</div>
+      </div>
+
+      <div class="card gauge-card" id="gaugeDiskCard">
+        <div class="gauge-label">Disk I/O</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 100 100">
+            <circle class="gauge-track" cx="50" cy="50" r="38"/>
+            <circle class="gauge-fill" id="gaugeDiskFill" cx="50" cy="50" r="38"
+              stroke="var(--warn)"
+              stroke-dasharray="238.76"
+              stroke-dashoffset="238.76"/>
+          </svg>
+          <div class="gauge-center">
+            <div class="gauge-pct text-warn" id="gaugeDiskVal">0%</div>
+            <div class="gauge-unit">I/O</div>
+          </div>
+        </div>
+        <div class="gauge-sub" id="gaugeDiskSub">Read: 0 MB/s</div>
+      </div>
+
+      <div class="card gauge-card" id="gaugeStorCard">
+        <div class="gauge-label">Storage</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 100 100">
+            <circle class="gauge-track" cx="50" cy="50" r="38"/>
+            <circle class="gauge-fill" id="gaugeStorFill" cx="50" cy="50" r="38"
+              stroke="var(--green2)"
+              stroke-dasharray="238.76"
+              stroke-dashoffset="238.76"/>
+          </svg>
+          <div class="gauge-center">
+            <div class="gauge-pct text-green" id="gaugeStorVal">0%</div>
+            <div class="gauge-unit">DISK</div>
+          </div>
+        </div>
+        <div class="gauge-sub" id="gaugeStorSub">0 / 2 TB</div>
+      </div>
+    </div>
+  </div><div class="section" id="admin">
+    <div class="section-head">
+      <div class="section-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div class="section-title">My <span>Active Services</span></div>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="card" id="health">
+      <div class="card-pad" style="border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.95rem;letter-spacing:.04em">System Health Monitor</div>
+          <div style="font-size:.73rem;color:var(--muted);margin-top:2px">All critical services and their performance metrics</div>
+        </div>
+        <button class="dd-btn" onclick="refreshHealth()" style="font-size:.76rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.85"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="health-table" id="healthTable">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Status</th>
+              <th>CPU Load</th>
+              <th>Mem Usage</th>
+              <th>Response</th>
+              <th>Uptime</th>
+              <th>Last Check</th>
+            </tr>
+          </thead>
+          <tbody id="healthBody">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </div><div style="height:2rem"></div>
+
+</main><div class="modal-backdrop" id="editProfileModal">
+  <div class="modal-box">
+    <div class="modal-title">Edit Profile</div>
+    <div class="modal-sub">Update your account information.</div>
+    <div class="modal-field">
+      <label>Display Name</label>
+      <input type="text" id="epName" placeholder="Your Name" value="User"/>
+    </div>
+    <div class="modal-field">
+      <label>Email Address</label>
+      <input type="email" id="epEmail" placeholder="you@example.com" value="user@virtustat.local"/>
+    </div>
+    <div class="modal-field">
+      <label>New Password</label>
+      <input type="password" id="epPw" placeholder="Leave blank to keep current"/>
+    </div>
+    <div class="modal-field">
+      <label>Department</label>
+      <input type="text" id="epDept" placeholder="Your Department" value="Client Services"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('editProfileModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal-box">
+    <div class="confirm-icon err" id="confirmIcon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="10.29 3.86 1.82 18 22.18 18 13.71 3.86 10.29 3.86"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="modal-title" id="confirmTitle">Confirm Action</div>
+    <div class="modal-sub" id="confirmSub">Are you sure?</div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn-danger" id="confirmBtn" onclick="doConfirmAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/user.js"></script>
+</body>
+</html>
