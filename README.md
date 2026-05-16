@@ -1,3 +1,23 @@
+VirtuStat/
+│
+├── app.py
+│
+├── templates/
+│   ├── VirtuStat.html
+│   ├── user.html
+│   └── admin.html
+│
+├── static/
+	   ├── css/
+	   │   ├── VirtuStat.css
+	   │   ├── user.css
+	   │   └── admin.css
+	   │
+	   ├── js/
+	   │   ├── VirtuStat.js
+	   │   ├── user.js
+	   │   └── admin.js
+
 INSTALL
 
 pip install --break-system-packages psutil
@@ -8,11 +28,12 @@ CREATE DATABASE virtustat;
 USE virtustat;
 
 CREATE TABLE users (
+
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     gmail VARCHAR(120) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-
+    
     role ENUM('user','admin') DEFAULT 'user',
     status ENUM('Active','Frozen','Banned') DEFAULT 'Active',
 
@@ -28,6 +49,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE admin_accounts (
+  
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
