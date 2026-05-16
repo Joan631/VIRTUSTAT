@@ -219,8 +219,19 @@
         <input type="password" id="aPassword" placeholder="Enter administrator password"/>
         <span class="input-icon" onclick="toggleField('aPassword',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
       </div>
+    <div class="attempt-bar" id="aAttemptBar">
+      <div class="attempt-row">
+        <span id="aAttemptText">Failed attempts</span>
+        <span id="aAttemptCount">0 / 5</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="aBarFill" style="width:0%"></div></div>
     </div>
 
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('adminLoginModal')">Cancel</button>
+      <button class="btn btn-primary" id="aLoginBtn" onclick="doAdminLogin()" style="background:var(--amber);color:#0a0c0a;box-shadow:0 2px 12px rgba(245,158,11,.2)"><span id="aLoginBtnText">Sign In as Admin</span></button>
+    </div>
+    </div> </div> </div> 
 
 
 <!-- ============================================================

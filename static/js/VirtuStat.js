@@ -23,13 +23,15 @@ const API = {
 ============================================================ */
 let pinBuffer = "";
 let toastTimeout = null;
+let pinLocked = false;
+let pinLockTimer = null;
 
 /* ============================================================
    INIT
 ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
 
-  console.log("VirtuStat initialized ✔");
+  console.log("VirtuStat initialized ");
 
   initializeSystem();
 
@@ -45,7 +47,11 @@ function initializeSystem() {
   initPasswordStrength();
   initKeyboardSupport();
 
-  feather.replace();
+  if (window.feather) {
+    feather.replace();
+  } else {
+    console.warn("Feather icons not loaded");
+  }
 
 }
 
@@ -456,6 +462,8 @@ async function doRecovery() {
 ============================================================ */
 function pinPress(number) {
 
+  if (pinLocked) return; 
+
   if (pinBuffer.length >= 4) return;
 
   pinBuffer += number;
@@ -465,7 +473,6 @@ function pinPress(number) {
   if (pinBuffer.length === 4) {
     validatePin();
   }
-
 }
 
 function pinBack() {
@@ -507,6 +514,44 @@ function updatePinDots() {
 
 }
 
+function lockPinUI(seconds) {
+
+  pinLocked = true;
+
+  const keys = document.querySelectorAll(".pin-key");
+  const input = document.getElementById("pinInput");
+
+  keys.forEach(k => k.disabled = true);
+  if (input) input.disabled = true;
+
+  let time = seconds;
+
+  showToast("err", `Locked for ${time}s`);
+
+  pinLockTimer = setInterval(() => {
+
+    time--;
+
+    if (time <= 0) {
+      clearInterval(pinLockTimer);
+      unlockPinUI();
+    }
+
+  }, 1000);
+}
+
+function unlockPinUI() {
+
+  pinLocked = false;
+
+  const keys = document.querySelectorAll(".pin-key");
+  const input = document.getElementById("pinInput");
+
+  keys.forEach(k => k.disabled = false);
+  if (input) input.disabled = false;
+
+  showToast("ok", "PIN unlocked");
+}
 /* ============================================================
    PIN VALIDATION
 ============================================================ */
@@ -527,30 +572,48 @@ async function validatePin() {
 
     const data = await response.json();
 
+    // =========================
+    // HANDLE SERVER LOCK
+    // =========================
+    if (response.status === 403) {
+
+      const pinError = document.getElementById("pinError");
+      if (pinError) pinError.style.display = "flex";
+
+      showToast("err", data.message || "Locked");
+
+      // IMPORTANT: freeze UI here
+      if (typeof lockPinUI === "function") {
+        lockPinUI(data.lock_remaining || 30);
+      }
+
+      resetPin();
+      return;
+    }
+
+    // =========================
+    // SUCCESS
+    // =========================
     if (data.success) {
 
       closeModal("pinModal");
-
       resetPin();
-
       openModal("adminLoginModal");
 
       showToast("ok", "PIN verified");
 
-    } else {
-
-      const pinError =
-        document.getElementById("pinError");
-
-      if (pinError) {
-        pinError.style.display = "flex";
-      }
-
-      showToast("err", "Invalid administrator PIN");
-
-      resetPin();
-
+      return;
     }
+
+    // =========================
+    //  WRONG PIN
+    // =========================
+    const pinError = document.getElementById("pinError");
+    if (pinError) pinError.style.display = "flex";
+
+    showToast("err", data.message || "Invalid administrator PIN");
+
+    resetPin();
 
   } catch (error) {
 
@@ -559,11 +622,8 @@ async function validatePin() {
     showToast("err", "PIN server unavailable");
 
     resetPin();
-
   }
-
 }
-
 /* ============================================================
    ADMIN LOGIN
 ============================================================ */
@@ -738,6 +798,7 @@ function checkStrength(password) {
   ];
 
   bar.style.width = `${score * 25}%`;
+  
 
   label.textContent = levels[score];
 

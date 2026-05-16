@@ -12,6 +12,10 @@ from datetime import datetime
 import platform
 import subprocess
 import re
+from collections import defaultdict
+
+pin_attempts = defaultdict(int)
+pin_lock_until = defaultdict(float)
 
 # ============================================================
 # FLASK INIT
@@ -451,7 +455,47 @@ def admin_login():
 @app.route("/api/admin/pin", methods=["POST"])
 def admin_pin():
     data = request.json or {}
-    return jsonify({"success": data.get("pin") == ADMIN_PIN})
+    user_key = request.remote_addr  # or session.get("username") for stronger binding
+
+    now = time.time()
+
+    # =========================
+    # CHECK LOCK STATUS
+    # =========================
+    if pin_lock_until[user_key] > now:
+        return jsonify({
+            "success": False,
+            "message": "Locked. Try again later.",
+            "lock_remaining": int(pin_lock_until[user_key] - now)
+        }), 403
+
+    # =========================
+    # CHECK PIN
+    # =========================
+    if data.get("pin") == ADMIN_PIN:
+        pin_attempts[user_key] = 0
+        pin_lock_until[user_key] = 0
+        return jsonify({"success": True})
+
+    # =========================
+    # WRONG PIN
+    # =========================
+    pin_attempts[user_key] += 1
+
+    # lock after 5 attempts
+    if pin_attempts[user_key] >= 5:
+        pin_lock_until[user_key] = now + 30
+        pin_attempts[user_key] = 0
+
+        return jsonify({
+            "success": False,
+            "message": "Too many attempts. Locked for 30 seconds."
+        }), 403
+
+    return jsonify({
+        "success": False,
+        "message": f"Invalid PIN ({pin_attempts[user_key]}/5)"
+    }), 401
 
 # ============================================================
 # RECOVER ACCOUNT
